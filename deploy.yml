@@ -5,11 +5,56 @@ metadata:
   name: openbb-userconfig
 type: Opaque
 stringData:
+  .env: |
+    OPENBB_DEV_MODE=True
+    OPENBB_DEBUG_MODE=True
+  system_settings.json: |
+    {
+        "api_settings": {
+            "version": "1",
+            "title": "OpenBB Platform API",
+            "description": "This is the OpenBB Platform API.",
+            "terms_of_service": "http://example.com/terms/",
+            "contact_name": "OpenBB Team",
+            "contact_url": "https://openbb.co",
+            "contact_email": "hello@openbb.co",
+            "license_name": "AGPLv3",
+            "license_url": "https://github.com/OpenBB-finance/OpenBB/blob/develop/LICENSE",
+            "servers": [
+                {
+                    "url": "",
+                    "description": "Local OpenBB development server"
+                }
+            ],
+            "cors": {
+                "allow_origins": [
+                    "*"
+                ],
+                "allow_methods": [
+                    "*"
+                ],
+                "allow_headers": [
+                    "*"
+                ]
+            },
+            "prefix": "/api/v1"
+        }
+    }
   user_settings.json: |
     {
         "credentials": {
             "fmp_api_key": "REPLACE",
             "polygon_api_key": "REPLACE"
+            "benzinga_api_key": "REPLACE",
+            "fred_api_key": "REPLACE",
+            "nasdaq_api_key": "REPLACE",
+            "intrinio_api_key": "REPLACE",
+            "alpha_vantage_api_key": "REPLACE",
+            "biztoc_api_key": "REPLACE",
+            "tradier_api_key": "REPLACE",
+            "tradier_account_type": "sandbox OR live",
+            "tradingeconomics_api_key": "REPLACE",
+            "tiingo_token": "REPLACE"
         },
         "preferences": {
             "data_directory": "/app",

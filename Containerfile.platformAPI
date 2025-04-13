@@ -13,7 +13,7 @@ RUN dnf update -y \
 USER 1001
 
 RUN python3 -m pip install "openbb[all]" \
- && python3 -m pip install openbb-platform-api email-validator \
+ && python3 -m pip install openbb-platform-api email-validator
 
 EXPOSE 6900
 

@@ -1,3 +1,38 @@
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: openbb-userconfig
+type: Opaque
+stringData:
+  user_settings.json: |
+    {
+        "credentials": {
+            "fmp_api_key": "REPLACE",
+            "polygon_api_key": "REPLACE"
+        },
+        "preferences": {
+            "data_directory": "/app",
+            "export_directory": "/app/exports",
+            "metadata": true,
+            "output_type": "OBBject"
+        },
+        "defaults": {
+            "commands": {
+                "/equity/price/historical": {
+                    "provider": "fmp"
+                },
+                "/equity/fundamental/balance": {
+                    "provider": [
+                        "intrinio",
+                        "fmp",
+                        "polygon"
+                    ]
+                }
+            }
+        }
+    }
+
 # In case you have your trusted Root CA certificates configured cluster-wide,
 # this ConfigMap with that special label will inject all the trusted CA certificates
 # into this ConfigMap
@@ -42,6 +77,9 @@ spec:
         - name: openbb
           persistentVolumeClaim:
             claimName: openbb
+        - name: openbb-userconfig
+          secret:
+            secretName: openbb-userconfig
         - name: trusted-root-ca-certs
           configMap:
             name: trusted-root-ca-certs
@@ -76,6 +114,9 @@ spec:
               cpu: "2000m"
               memory: "8Gi"
           volumeMounts:
+            # Secret with config
+            - name: openbb-userconfig
+              mountPath: /opt/app-root/src/.openbb_platform
             # PVC to store things
             - name: openbb
               mountPath: /app

@@ -3,11 +3,16 @@ FROM registry.access.redhat.com/ubi9/python-311:latest
 
 WORKDIR /app
 
+USER 0
+
 RUN dnf update -y \
  && dnf clean all \
  && rm -rf /var/cache/yum \
  && python3 -m pip install "openbb[all]" \
- && python3 -m pip install openbb-platform-api
+ && python3 -m pip install openbb-platform-api \
+ && chown 1001:0 /app
+
+USER 1001
 
 EXPOSE 6900
 

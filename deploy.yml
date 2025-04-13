@@ -1,0 +1,114 @@
+# In case you have your trusted Root CA certificates configured cluster-wide,
+# this ConfigMap with that special label will inject all the trusted CA certificates
+# into this ConfigMap
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: trusted-root-ca-certs
+  labels:
+    config.openshift.io/inject-trusted-cabundle: 'true'
+data: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openbb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openbb
+spec:
+  selector:
+    matchLabels:
+      app: openbb
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: openbb
+    spec:
+      volumes:
+        - name: openbb
+          persistentVolumeClaim:
+            claimName: openbb
+        - name: trusted-root-ca-certs
+          configMap:
+            name: trusted-root-ca-certs
+            items:
+              - key: ca-bundle.crt
+                path: tls-ca-bundle.pem
+      containers:
+        - name: openbb
+          image: quay.io/kenmoini/openbb:latest
+          imagePullPolicy: Always
+          # In case you're using an Outbound proxy, uncomment these lines
+          #env:
+          #  - name: HTTP_PROXY
+          #    value: http://proxy.kemo.labs:3129
+          #  - name: http_proxy
+          #    value: http://proxy.kemo.labs:3129
+          #  - name: HTTPS_PROXY
+          #    value: http://proxy.kemo.labs:3129
+          #  - name: https_proxy
+          #    value: http://proxy.kemo.labs:3129
+          #  - name: NO_PROXY
+          #    value: ".kemo.labs,.kemo.network,.local,.svc,localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+          #  - name: no_proxy
+          #    value: ".kemo.labs,.kemo.network,.local,.svc,localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+          ports:
+            - containerPort: 6900
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "4Gi"
+            limits:
+              cpu: "2000m"
+              memory: "8Gi"
+          volumeMounts:
+            # PVC to store things
+            - name: openbb
+              mountPath: /app
+            # If you are using custom Root CAs you can mount it with the paired ConfigMap
+            - mountPath: /etc/pki/ca-trust/extracted/pem
+              name: trusted-root-ca-certs
+              readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openbb
+spec:
+  selector:
+    app: openbb
+  ports:
+    - protocol: TCP
+      port: 6900
+      targetPort: 6900
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: openbb
+spec:
+  #host: openbb.apps.core-ocp.lab.kemo.network
+  path: /
+  to:
+    kind: Service
+    name: openbb
+  port:
+    targetPort: 6900
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
